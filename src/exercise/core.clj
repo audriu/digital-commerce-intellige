@@ -40,7 +40,9 @@
                   json/write-str)]
     (spit "third.json" data)))
 
-(defn get-all-images-from-nested-map [all-data]
+(defn get-all-images-from-nested-map
+  "This solution is vulnerable to stackoverflow. I will reimplement if I have enough time."
+  [all-data]
   (if (empty? all-data)
     '()
     (let [head (first all-data)]
@@ -66,9 +68,32 @@
                     (map vector))]
     (write-csv "fourth.csv" ["images"] images)))
 
+(def cash-spent (atom 0))
+(defn accumulate-price [item limit]
+  (swap! cash-spent #(+ % (get item "price")))
+  (>= limit @cash-spent))
+
+(defn fifth-exercise
+  "This implementation will choose cheapest items from every brand until there are money left.
+  Ths could use any sort of greedy algorithm having enough time/need to implement."
+  [goods]
+  (let [cash-available 250
+        purchases (->> goods
+                       (group-by #(get % "brandName"))
+                       (fmap #(sort-by (fn [item] (get "price " item)) %))
+                       (fmap first)
+                       (map val)
+                       (map #(update % "price" (fn [param1] (Float/parseFloat param1))))
+                       (sort-by #(get % "price"))
+                       (take-while #(accumulate-price % cash-available))
+                       (map #(select-keys % ["itemId" "brandName" "price"]))
+                       (map vals))]
+    (write-csv "fifth.csv" ["itemId" "brandName" "price"] purchases)))
+
 (defn -main [& _]
   (let [initial-data (json/read-str (slurp "lipstick.json"))]
     (first-exercise (get-in initial-data ["mods" "listItems"]))
     (second-exercise (get-in initial-data ["mods" "listItems"]))
     (third-exercise (get-in initial-data ["mods" "listItems"]))
-    (fourth-exercise initial-data)))
+    (fourth-exercise initial-data)
+    (fifth-exercise (get-in initial-data ["mods" "listItems"]))))
