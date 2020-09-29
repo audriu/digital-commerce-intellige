@@ -2,8 +2,7 @@
   (:require [clojure.algo.generic.functor :refer [fmap]]
             [clojure.data.csv :as csv]
             [clojure.data.json :as json]
-            [clojure.java.io :as io]
-            [clojure.set :refer [union]])
+            [clojure.java.io :as io])
   (:gen-class))
 
 (defn write-csv [filename header data]
@@ -41,7 +40,7 @@
     (spit "third.json" data)))
 
 (defn get-all-images-from-nested-map
-  "This solution is vulnerable to stackoverflow. I will reimplement if I have enough time."
+  "This solution is vulnerable to stackoverflow. I will reimplement it if I have enough time. Possibly with tree walking."
   [all-data]
   (if (empty? all-data)
     '()
@@ -54,7 +53,11 @@
                 :else '())
               (get-all-images-from-nested-map (rest all-data))))))
 
-(defn get-file-from-url [url]
+(defn get-file-from-url
+  "This function gets the last part from the image address.
+  Knowing that it will always be well formed URL can then use something like:
+  https://stackoverflow.com/questions/4050087/how-to-obtain-the-last-path-segment-of-a-uri/4050114#4050114"
+  [url]
   (let [last-index (clojure.string/last-index-of url "/")]
     (if (nil? last-index)
       url
